@@ -13,9 +13,29 @@
 pthread_mutex_t m;
 pthread_cond_t prod;
 pthread_cond_t con;
+int threadcount = 4;
 
 int main(int argc, char* argv[]){
-
+	file = fopen(argv[1], "r");
+	if (file == NULL) {
+		printf("Error: Opening File");
+		exit(1);
+	}
+	int lines = 1;
+	int ch = 0;
+	while(!feof(file)){
+		ch = fgets(file)
+		if (ch == "\n"){
+			lines++;
+		}
+	}
+	int i;
+	for(i=0;i=lines;i++){
+		read = fgets(i, size(i), "%s");
+		//pthread__t producers();
+		printf("\s", read);
+	}
+	exit(0)
 }
 
 void producer(){
