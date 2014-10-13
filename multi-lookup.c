@@ -122,7 +122,7 @@ void consumer(void* arg){
 
 	while(!done || !queue_is_empty(&q)){
 		pthread_mutex_lock(&m);
-		while(queue_is_empty(&q)){
+		while(queue_is_empty(&q) && !done){
 			pthread_cond_wait(&con, &m);
 		}
 		char* host = queue_pop(&q);
