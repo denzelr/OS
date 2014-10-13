@@ -25,14 +25,15 @@ queue q;
 
 int main(int argc, char* argv[]){
 	//argument error handeling
+
 	if(argc < MINARGS) {
-		fprintf(stderr, "Error: Does not have the required arguments");
+		fprintf(stderr, "Error: Does not have the required arguments\n");
 		exit(1);
 	}
 
 	//  check for queue failure
 	if(queue_init(&q, SBUFSIZE) == QUEUE_FAILURE){
-		fprintf(stderr, "Error: failure initializing queue");
+		fprintf(stderr, "Error: failure initializing queue\n");
 		exit(-1);
 	}
 
@@ -44,13 +45,13 @@ int main(int argc, char* argv[]){
 	int i;
 	for(i = 1; i < (argc-2); i++){
 		FILE* file = fopen(argv[i], "r");
-		if (!file) {fprintf(stderr, "Error: Could not open file");}
-		pthread_create(&prodthreads[i], NULL, producer, (void*) file);
+		if (!file) {fprintf(stderr, "Error: Could not open file\n");}
+		pthread_create(&prodthreads[i], NULL, producer,  file);
 		numprodthreads++;
 	}
 	FILE* outfile = fopen(argv[(argc-1)], "w");
 	if(!outfile) {
-		fprintf(stderr, "ERROR: bad output file");
+		fprintf(stderr, "ERROR: bad output file\n");
 		exit(0);
 	}
 
@@ -60,7 +61,7 @@ int main(int argc, char* argv[]){
 	//for(all consumer threads)
 		//call consumer
 	for(i=0; i<THREADMAX; i++){
-		pthread_create(&conthreads[i], NULL, consumer, (void*) outfile);
+		pthread_create(&conthreads[i], NULL, consumer,  outfile);
 	}
 
 	//Join producer threads
@@ -88,14 +89,16 @@ void producer(void *arg){
 	//unlock mutex
 	//close input file
 	FILE* file = arg;
-	char buf[SBUFSIZE];
+	char name[SBUFSIZE];
+	fprintf(stderr, "prod thread spawn\n");
 	
-	while(fscanf(file, INPUTFS, buf)){
+	while(fscanf(file, INPUTFS, name) > 0){
 		pthread_mutex_lock(&m);
 		while(queue_is_full(&q)){
 			pthread_cond_wait(&prod, &m);
 		}
-		queue_push(&q, buf);
+		queue_push(&q, name);
+		printf("queue push: %s\n", name);
 		pthread_cond_signal(&con);
 		pthread_mutex_unlock(&m);
 	}
@@ -115,17 +118,19 @@ void consumer(void* arg){
 	//		exit thread??
 	FILE* file = arg;
 	char firstipstr[INET6_ADDRSTRLEN];
+	fprintf(stderr, "con thread spawn\n");
 
 	while(!done || !queue_is_empty(&q)){
 		pthread_mutex_lock(&m);
 		while(!queue_is_empty(&q)){
 			pthread_cond_wait(&con, &m);
 		}
-		void* temp = queue_pop(&q);
-		if (dnslookup(temp, firstipstr, sizeof(firstipstr)) == UTIL_FAILURE){
-			fprintf(stderr, "ERROR: dnslookup error: %s\n", temp);
+		char* host = queue_pop(&q);
+		if (dnslookup(host, firstipstr, sizeof(firstipstr)) == UTIL_FAILURE){
+			fprintf(stderr, "ERROR: dnslookup error: %s\n", host);
 		}
-		fprintf(file, "%s,%s\n", temp, firstipstr);
+		fprintf(file, "%s, %s\n", host, firstipstr);
+		printf ("resolved: %s, %s\n", host, firstipstr);
 		pthread_cond_signal(&prod);
 		pthread_mutex_unlock(&m);
 	}
