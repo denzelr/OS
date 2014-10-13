@@ -120,9 +120,9 @@ void consumer(void* arg){
 	char firstipstr[INET6_ADDRSTRLEN];
 	fprintf(stderr, "con thread spawn\n");
 
-	while(!done || !queue_is_empty(&q)){
+	while(!done){
 		pthread_mutex_lock(&m);
-		while(!queue_is_empty(&q)){
+		while(queue_is_empty(&q)){
 			pthread_cond_wait(&con, &m);
 		}
 		char* host = queue_pop(&q);
