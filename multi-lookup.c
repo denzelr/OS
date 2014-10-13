@@ -49,6 +49,7 @@ int main(int argc, char* argv[]){
 		pthread_create(&prodthreads[i], NULL, producer,  file);
 		numprodthreads++;
 	}
+	
 	FILE* outfile = fopen(argv[(argc-1)], "w");
 	if(!outfile) {
 		fprintf(stderr, "ERROR: bad output file\n");
@@ -126,13 +127,13 @@ void consumer(void* arg){
 			pthread_cond_wait(&con, &m);
 		}
 		char* host = queue_pop(&q);
-		if (dnslookup(host, firstipstr, sizeof(firstipstr)) == UTIL_FAILURE){
-			fprintf(stderr, "ERROR: dnslookup error: %s\n", host);
-		}
-		fprintf(file, "%s, %s\n", host, firstipstr);
-		printf ("resolved: %s, %s\n", host, firstipstr);
-		pthread_cond_signal(&prod);
-		pthread_mutex_unlock(&m);
+			if (dnslookup(host, firstipstr, sizeof(firstipstr)) == UTIL_FAILURE){
+				fprintf(stderr, "ERROR: dnslookup error: %s\n", host);
+			}
+			fprintf(file, "%s, %s\n", host, firstipstr);
+			printf ("resolved: %s, %s\n", host, firstipstr);
+			pthread_cond_signal(&prod);
+			pthread_mutex_unlock(&m);
 	}
 	pthread_exit(file);
 
