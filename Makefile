@@ -16,9 +16,9 @@ pthread-hello: pthread-hello.o
 	$(CC) $(LFLAGS) $^ -o $@
 
 multi-lookup: multi-lookup.o queue.o util.o
-	$(CC) $(LFLAGS) $< -o $@
+	$(CC) $(LFLAGS) $^ -o $@
 
-multi-lookup.o: multi-lookup.c queue.h 
+multi-lookup.o: multi-lookup.c
 	$(CC) $(CFLAGS) $<
 
 lookup.o: lookup.c
