@@ -134,7 +134,7 @@ void* consumer(void* arg){
 	char* host = malloc(SBUFSIZE * sizeof(char));
 	fprintf(stderr, "con thread spawn\n");
 
-	while(!done || !queue_is_empty(&q)){
+	while(!done || !queue_is_empty(&q)){/*
 		
 		while(queue_is_empty(&q)){
 			printf("%s\n","consumer sleeping" );
@@ -149,7 +149,25 @@ void* consumer(void* arg){
 			printf ("resolved: %s, %s\n", host, firstipstr);
 			pthread_cond_signal(&prod);
 			pthread_mutex_unlock(&m);
-	}
+	}*/
+		host = queue_pop(&q);
+		if(host == NULL){
+			printf("consumer sleeping\n");
+			//pthread_cond_wait(&con, &m);
+			pthread_mutex_unlock(&m);
+			usleep(100);
+		}
+		else if (dnslookup(host, firstipstr, sizeof(firstipstr)) == UTIL_FAILURE){
+			fprintf(stderr, "ERROR: dnslookup error: %s\n", host);
+		}
+		else{
+			fprintf(file, "%s, %s\n", host, firstipstr);
+			printf ("resolved: %s, %s\n", host, firstipstr);
+			
+		}
+		pthread_cond_signal(&prod);
+		pthread_mutex_unlock(&m);
+	}	
 	pthread_exit(file);
 
 }
