@@ -95,6 +95,7 @@ void* producer(void *arg){
 	FILE* file = arg;
 	pthread_mutex_lock(&m);
 	char name[SBUFSIZE];
+
 	fprintf(stderr, "prod thread spawn\n");
 	
 	while(fscanf(file, INPUTFS, name) > 0){
@@ -104,7 +105,9 @@ void* producer(void *arg){
 			printf("%s\n", "producer asleep" );
 			pthread_cond_wait(&prod, &m);
 		}
-		queue_push(&q, name);
+		char* temp = malloc(SBUFSIZE*sizeof(char));
+		strcpy(temp, name);
+		queue_push(&q, temp);
 		printf("queue push: %s\n", name);
 		pthread_cond_signal(&con);
 		pthread_mutex_unlock(&m);
