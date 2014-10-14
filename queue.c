@@ -80,7 +80,7 @@ void* queue_pop(queue* q){
 }
 
 int queue_push(queue* q, void* new_payload){
-    
+    //printf("%s\n", new_payload);
     if(queue_is_full(q)){
 	return QUEUE_FAILURE;
     }

@@ -8,7 +8,7 @@
 #include "util.h"
 #include "queue.h"
 
-#define MINARGS 3
+#define MINARGS 5
 #define MAX_INPUT_FILES 10
 #define USAGE "<inputFilePath> <outputFilePath>"
 #define SBUFSIZE 1025
@@ -19,8 +19,8 @@ pthread_mutex_t m;
 pthread_cond_t prod;
 pthread_cond_t con;
 int done = 0;
-void producer(void *arg);
-void consumer(void *arg);
+void* producer(void *arg);
+void* consumer(void *arg);
 queue q;
 
 int main(int argc, char* argv[]){
@@ -32,7 +32,7 @@ int main(int argc, char* argv[]){
 	}
 
 	//  check for queue failure
-	if(queue_init(&q, SBUFSIZE) == QUEUE_FAILURE){
+	if(queue_init(&q, QUEUEMAXSIZE) == QUEUE_FAILURE){
 		fprintf(stderr, "Error: failure initializing queue\n");
 		exit(-1);
 	}
@@ -43,6 +43,7 @@ int main(int argc, char* argv[]){
 	//for(all files) 
 		//create producer thread
 	int i;
+	
 	for(i = 1; i < (argc-2); i++){
 		FILE* file = fopen(argv[i], "r");
 		if (!file) {fprintf(stderr, "Error: Could not open file\n");}
@@ -65,6 +66,8 @@ int main(int argc, char* argv[]){
 		pthread_create(&conthreads[i], NULL, consumer,  outfile);
 	}
 
+
+
 	//Join producer threads
 	for(i=1; i<(argc-2); i++){
 		pthread_join(prodthreads[i], NULL);
@@ -81,7 +84,7 @@ int main(int argc, char* argv[]){
 	return 1;
 }
 
-void producer(void *arg){
+void* producer(void *arg){
 	//In each file, iterate through lines
 	//Create mutex lock
 	//wait if queue is full
@@ -90,12 +93,14 @@ void producer(void *arg){
 	//unlock mutex
 	//close input file
 	FILE* file = arg;
-	char* name = malloc(SBUFSIZE * sizeof(char));
+	char name[SBUFSIZE];
 	fprintf(stderr, "prod thread spawn\n");
 	
 	while(fscanf(file, INPUTFS, name) > 0){
+
 		pthread_mutex_lock(&m);
 		while(queue_is_full(&q)){
+			printf("%s\n", "producer asleep" );
 			pthread_cond_wait(&prod, &m);
 		}
 		queue_push(&q, name);
@@ -107,7 +112,7 @@ void producer(void *arg){
 	pthread_exit(file);
 }
 
-void consumer(void* arg){
+void* consumer(void* arg){
 	//while were not finished or there is stuff in queue
 	//		take out mutex lock
 	//		condition handeling
@@ -122,9 +127,10 @@ void consumer(void* arg){
 	char* host = malloc(SBUFSIZE * sizeof(char));
 	fprintf(stderr, "con thread spawn\n");
 
-	while(!done || !queue_is_empty(&q)){
+	while(!done && !queue_is_empty(&q)){
 		pthread_mutex_lock(&m);
-		while(queue_is_empty(&q) && !done){
+		while(queue_is_empty(&q)){
+			printf("%s\n","consumer sleeping" );
 			pthread_cond_wait(&con, &m);
 		}
 		host = queue_pop(&q);
