@@ -25,9 +25,9 @@ queue q;
 
 int main(int argc, char* argv[]){
 	//argument error handeling
-	pthread_mutex_init(&m, NULL);
-	pthread_cond_init(&prod, NULL);
-	pthread_cond_init(&con, NULL);
+	//pthread_mutex_init(&m, NULL);
+	//pthread_cond_init(&prod, NULL);
+	//pthread_cond_init(&con, NULL);
 	if(argc < (MINARGS)) {
 		fprintf(stderr, "Error: Does not have the required arguments\n");
 		exit(1);
@@ -75,14 +75,16 @@ int main(int argc, char* argv[]){
 		pthread_join(prodthreads[i], NULL);
 	}
 	done = 1;
-	
+	//free(prodthreads);
 	//Join consumer threads
 	for(i=1; i < THREADMAX; i++) {
 		pthread_join(conthreads[i], NULL);
 	}
-
+	//free(conthreads);
 	//close output file
 	fclose(outfile);
+	queue_cleanup(&q);
+	//free(&q);
 	return 1;
 }
 
@@ -110,11 +112,14 @@ void* producer(void *arg){
 		char* temp = malloc(SBUFSIZE*sizeof(char));
 		strcpy(temp, name);
 		queue_push(&q, temp);
-		printf("queue push: %s\n", name);
+		//printf("queue push: %s\n", name);
 		pthread_cond_signal(&con);
 		pthread_mutex_unlock(&m);
 	}
 	fclose(file);
+	//free(name);
+	//free(file);
+	//free(arg);
 	pthread_exit(file);
 }
 
@@ -131,9 +136,9 @@ void* consumer(void* arg){
 	FILE* file = arg;
 	char firstipstr[INET6_ADDRSTRLEN];
 	pthread_mutex_lock(&m);
-	char* host = malloc(SBUFSIZE * sizeof(char));
+	
 	fprintf(stderr, "con thread spawn\n");
-
+	char* host;
 	while(!done || !queue_is_empty(&q)){/*
 		
 		while(queue_is_empty(&q)){
@@ -149,7 +154,7 @@ void* consumer(void* arg){
 			printf ("resolved: %s, %s\n", host, firstipstr);
 			pthread_cond_signal(&prod);
 			pthread_mutex_unlock(&m);
-	}*/
+	}*/	
 		host = queue_pop(&q);
 		if(host == NULL){
 			printf("consumer sleeping\n");
@@ -162,12 +167,15 @@ void* consumer(void* arg){
 		}
 		else{
 			fprintf(file, "%s, %s\n", host, firstipstr);
-			printf ("resolved: %s, %s\n", host, firstipstr);
+			//printf ("resolved: %s, %s\n", host, firstipstr);
+			free(host);
 			
 		}
 		pthread_cond_signal(&prod);
 		pthread_mutex_unlock(&m);
-	}	
+	}
+	//free(file);
+	//free(arg);	
 	pthread_exit(file);
 
 }
