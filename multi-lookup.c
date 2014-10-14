@@ -25,7 +25,9 @@ queue q;
 
 int main(int argc, char* argv[]){
 	//argument error handeling
-
+	pthread_mutex_init(&m, NULL);
+	pthread_cond_init(&prod, NULL);
+	pthread_cond_init(&con, NULL);
 	if(argc < (MINARGS)) {
 		fprintf(stderr, "Error: Does not have the required arguments\n");
 		exit(1);
@@ -93,14 +95,14 @@ void* producer(void *arg){
 	//unlock mutex
 	//close input file
 	FILE* file = arg;
-	pthread_mutex_lock(&m);
+
 	char name[SBUFSIZE];
 
 	fprintf(stderr, "prod thread spawn\n");
 	
 	while(fscanf(file, INPUTFS, name) > 0){
 
-		
+		pthread_mutex_lock(&m);
 		while(queue_is_full(&q)){
 			printf("%s\n", "producer asleep" );
 			pthread_cond_wait(&prod, &m);
