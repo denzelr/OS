@@ -31,8 +31,8 @@ int main(int argc, char* argv[]){
 	//pthread_cond_init(&con, NULL);
 	cores = sysconf(_SC_NPROCESSORS_ONLN);
 	int numconthreads;
-	printf("we are running %i producer threads\n", argc);
-	if((2*cores) >= (argc)){
+	printf("we are running %i producer threads\n", (argc - 2));
+	if((2*cores) >= (argc-2)){
 		numconthreads = ((2*cores) - (argc - 2));
 	} 
 	else{
@@ -171,9 +171,9 @@ void* consumer(void* arg){
 		host = queue_pop(&q);
 		if(host == NULL){
 			printf("consumer sleeping\n");
-			//pthread_cond_wait(&con, &m);
-			pthread_mutex_unlock(&m);
-			usleep(100);
+			pthread_cond_wait(&con, &m);
+			//pthread_mutex_unlock(&m);
+			//usleep(100);
 		}
 		else if (dnslookup(host, firstipstr, sizeof(firstipstr)) == UTIL_FAILURE){
 			fprintf(stderr, "ERROR: dnslookup error: %s\n", host);
