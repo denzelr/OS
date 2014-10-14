@@ -93,12 +93,13 @@ void* producer(void *arg){
 	//unlock mutex
 	//close input file
 	FILE* file = arg;
+	pthread_mutex_lock(&m);
 	char name[SBUFSIZE];
 	fprintf(stderr, "prod thread spawn\n");
 	
 	while(fscanf(file, INPUTFS, name) > 0){
 
-		pthread_mutex_lock(&m);
+		
 		while(queue_is_full(&q)){
 			printf("%s\n", "producer asleep" );
 			pthread_cond_wait(&prod, &m);
@@ -128,7 +129,7 @@ void* consumer(void* arg){
 	char* host = malloc(SBUFSIZE * sizeof(char));
 	fprintf(stderr, "con thread spawn\n");
 
-	while(!done && !queue_is_empty(&q)){
+	while(!done || !queue_is_empty(&q)){
 		
 		while(queue_is_empty(&q)){
 			printf("%s\n","consumer sleeping" );
