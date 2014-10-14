@@ -26,7 +26,7 @@ queue q;
 int main(int argc, char* argv[]){
 	//argument error handeling
 
-	if(argc < MINARGS) {
+	if(argc < (MINARGS)) {
 		fprintf(stderr, "Error: Does not have the required arguments\n");
 		exit(1);
 	}
