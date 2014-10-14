@@ -90,7 +90,7 @@ void producer(void *arg){
 	//unlock mutex
 	//close input file
 	FILE* file = arg;
-	char name[SBUFSIZE];
+	char* name = malloc(SBUFSIZE * sizeof(char));
 	fprintf(stderr, "prod thread spawn\n");
 	
 	while(fscanf(file, INPUTFS, name) > 0){
@@ -119,7 +119,7 @@ void consumer(void* arg){
 	//		exit thread??
 	FILE* file = arg;
 	char firstipstr[INET6_ADDRSTRLEN];
-	char* host;
+	char* host = malloc(SBUFSIZE * sizeof(char));
 	fprintf(stderr, "con thread spawn\n");
 
 	while(!done || !queue_is_empty(&q)){
@@ -128,6 +128,7 @@ void consumer(void* arg){
 			pthread_cond_wait(&con, &m);
 		}
 		host = queue_pop(&q);
+		//printf("host is: %s\n", host);
 			if (dnslookup(host, firstipstr, sizeof(firstipstr)) == UTIL_FAILURE){
 				fprintf(stderr, "ERROR: dnslookup error: %s\n", host);
 			}
