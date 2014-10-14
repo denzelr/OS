@@ -32,7 +32,7 @@ int main(int argc, char* argv[]){
 	}
 
 	//  check for queue failure
-	if(queue_init(&q, QUEUEMAXSIZE) == QUEUE_FAILURE){
+	if(queue_init(&q, SBUFSIZE) == QUEUE_FAILURE){
 		fprintf(stderr, "Error: failure initializing queue\n");
 		exit(-1);
 	}
@@ -44,7 +44,7 @@ int main(int argc, char* argv[]){
 		//create producer thread
 	int i;
 	
-	for(i = 1; i < (argc-2); i++){
+	for(i = 1; i < (argc-1); i++){
 		FILE* file = fopen(argv[i], "r");
 		if (!file) {fprintf(stderr, "Error: Could not open file\n");}
 		pthread_create(&prodthreads[i], NULL, producer,  file);
@@ -124,11 +124,12 @@ void* consumer(void* arg){
 	//		exit thread??
 	FILE* file = arg;
 	char firstipstr[INET6_ADDRSTRLEN];
+	pthread_mutex_lock(&m);
 	char* host = malloc(SBUFSIZE * sizeof(char));
 	fprintf(stderr, "con thread spawn\n");
 
 	while(!done && !queue_is_empty(&q)){
-		pthread_mutex_lock(&m);
+		
 		while(queue_is_empty(&q)){
 			printf("%s\n","consumer sleeping" );
 			pthread_cond_wait(&con, &m);
