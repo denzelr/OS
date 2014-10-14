@@ -119,6 +119,7 @@ void consumer(void* arg){
 	//		exit thread??
 	FILE* file = arg;
 	char firstipstr[INET6_ADDRSTRLEN];
+	char* host;
 	fprintf(stderr, "con thread spawn\n");
 
 	while(!done || !queue_is_empty(&q)){
@@ -126,7 +127,7 @@ void consumer(void* arg){
 		while(queue_is_empty(&q) && !done){
 			pthread_cond_wait(&con, &m);
 		}
-		char* host = queue_pop(&q);
+		host = queue_pop(&q);
 			if (dnslookup(host, firstipstr, sizeof(firstipstr)) == UTIL_FAILURE){
 				fprintf(stderr, "ERROR: dnslookup error: %s\n", host);
 			}
