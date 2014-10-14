@@ -8,7 +8,7 @@
 #include "util.h"
 #include "queue.h"
 
-#define MINARGS 5
+#define MINARGS 3
 #define MAX_INPUT_FILES 10
 #define USAGE "<inputFilePath> <outputFilePath>"
 #define SBUFSIZE 1025
@@ -22,12 +22,24 @@ int done = 0;
 void* producer(void *arg);
 void* consumer(void *arg);
 queue q;
+int cores;
 
 int main(int argc, char* argv[]){
 	//argument error handeling
 	//pthread_mutex_init(&m, NULL);
 	//pthread_cond_init(&prod, NULL);
 	//pthread_cond_init(&con, NULL);
+	cores = sysconf(_SC_NPROCESSORS_ONLN);
+	int numconthreads;
+	printf("we are running %i producer threads\n", argc);
+	if((2*cores) >= (argc)){
+		numconthreads = ((2*cores) - (argc - 2));
+	} 
+	else{
+		numconthreads = 1;
+	}
+	printf("machine has %i cores\n", cores);
+	printf("so we will run %i consumer threads\n", numconthreads);
 	if(argc < (MINARGS)) {
 		fprintf(stderr, "Error: Does not have the required arguments\n");
 		exit(1);
@@ -40,7 +52,7 @@ int main(int argc, char* argv[]){
 	}
 
 	pthread_t prodthreads[MAX_INPUT_FILES];
-	int numprodthreads = 0;
+	//int numprodthreads = 0;
 	
 	//for(all files) 
 		//create producer thread
@@ -50,7 +62,6 @@ int main(int argc, char* argv[]){
 		FILE* file = fopen(argv[i], "r");
 		if (!file) {fprintf(stderr, "Error: Could not open file\n");}
 		pthread_create(&prodthreads[i], NULL, producer,  file);
-		numprodthreads++;
 	}
 	
 	FILE* outfile = fopen(argv[(argc-1)], "w");
@@ -64,7 +75,7 @@ int main(int argc, char* argv[]){
 	//create consumer thread(arbitrary quantity)
 	//for(all consumer threads)
 		//call consumer
-	for(i=0; i<THREADMAX; i++){
+	for(i=0; i<numconthreads; i++){
 		pthread_create(&conthreads[i], NULL, consumer,  outfile);
 	}
 
@@ -77,12 +88,13 @@ int main(int argc, char* argv[]){
 	done = 1;
 	//free(prodthreads);
 	//Join consumer threads
-	for(i=1; i < THREADMAX; i++) {
+	for(i=0; i < numconthreads; i++) {
 		pthread_join(conthreads[i], NULL);
 	}
 	//free(conthreads);
 	//close output file
 	fclose(outfile);
+	//free(outfile);
 	queue_cleanup(&q);
 	//free(&q);
 	return 1;
@@ -115,6 +127,7 @@ void* producer(void *arg){
 		//printf("queue push: %s\n", name);
 		pthread_cond_signal(&con);
 		pthread_mutex_unlock(&m);
+		//free(temp); bad things happen but no more leak
 	}
 	fclose(file);
 	//free(name);
@@ -137,7 +150,7 @@ void* consumer(void* arg){
 	char firstipstr[INET6_ADDRSTRLEN];
 	pthread_mutex_lock(&m);
 	
-	fprintf(stderr, "con thread spawn\n");
+	printf("con thread spawn\n");
 	char* host;
 	while(!done || !queue_is_empty(&q)){/*
 		
@@ -168,9 +181,10 @@ void* consumer(void* arg){
 		else{
 			fprintf(file, "%s, %s\n", host, firstipstr);
 			//printf ("resolved: %s, %s\n", host, firstipstr);
-			free(host);
+			//free(host);
 			
 		}
+		free(host);
 		pthread_cond_signal(&prod);
 		pthread_mutex_unlock(&m);
 	}
