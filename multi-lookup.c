@@ -30,14 +30,10 @@ int main(int argc, char* argv[]){
 	//pthread_cond_init(&prod, NULL);
 	//pthread_cond_init(&con, NULL);
 	cores = sysconf(_SC_NPROCESSORS_ONLN);
-	int numconthreads;
+	int numconthreads = (2*cores);
 	printf("we are running %i producer threads\n", (argc - 2));
-	if((2*cores) >= (argc-2)){
-		numconthreads = ((2*cores) - (argc - 2));
-	} 
-	else{
-		numconthreads = 1;
-	}
+	
+
 	printf("machine has %i cores\n", cores);
 	printf("so we will run %i consumer threads\n", numconthreads);
 	if(argc < (MINARGS)) {
