@@ -23,7 +23,7 @@ handout - Assignment description and documentation
 lookup - A basic non-threaded DNS query-er
 queueTest - Unit test program for queue
 pthread-hello ; A simple threaded "Hello World" program
-
+multi-lookup ; A multi threaded version of lookup maximum number of input files is 10
 ---Examples---
 Build:
  make
@@ -39,3 +39,5 @@ Check queue for memory leaks:
 
 Run pthread-hello
  ./pthread-hello
+Run multi-lookup
+./multi-lookup <input 1> ... <input 10(maximum)> <output file>

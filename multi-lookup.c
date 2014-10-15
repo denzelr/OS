@@ -41,6 +41,11 @@ int main(int argc, char* argv[]){
 		exit(1);
 	}
 
+	if((argc-2) > MAX_INPUT_FILES){
+		fprintf(stderr, "Error: to many input files max is 10\n");
+		exit(-1);
+	}
+
 	//  check for queue failure
 	if(queue_init(&q, SBUFSIZE) == QUEUE_FAILURE){
 		fprintf(stderr, "Error: failure initializing queue\n");
@@ -56,7 +61,10 @@ int main(int argc, char* argv[]){
 	
 	for(i = 1; i < (argc-1); i++){
 		FILE* file = fopen(argv[i], "r");
-		if (!file) {fprintf(stderr, "Error: Could not open file\n");}
+		if (!file) {
+			fprintf(stderr, "Error: Could not open file %s\n", argv[i]);
+			exit(-1);
+		}
 		pthread_create(&prodthreads[i], NULL, producer,  file);
 	}
 	
